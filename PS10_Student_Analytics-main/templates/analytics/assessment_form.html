@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}Create Assessment{% endblock %}
+{% block page_title %}Create Assessment{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header"><h6 class="card-title mb-0"><i class="bi bi-file-earmark-plus-fill me-2 text-primary"></i>New Assessment</h6></div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label fw-500 small text-muted">Title</label>
+                            {{ form.title }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-500 small text-muted">Assessment Type</label>
+                            {{ form.assessment_type }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-500 small text-muted">Subject</label>
+                            {{ form.subject }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-500 small text-muted">Classroom</label>
+                            {{ form.classroom }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-500 small text-muted">Max Score</label>
+                            {{ form.max_score }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-500 small text-muted">Due Date</label>
+                            {{ form.due_date }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-500 small text-muted">Description</label>
+                            {{ form.description }}
+                        </div>
+                    </div>
+                    {% for field in form %}{% for err in field.errors %}<div class="text-danger small mt-1">{{ field.label }}: {{ err }}</div>{% endfor %}{% endfor %}
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn" style="background:#4f46e5;color:white;border-radius:10px;flex:1;"><i class="bi bi-save me-2"></i>Create Assessment</button>
+                        <a href="{% url 'assessment_list' %}" class="btn btn-outline-secondary" style="border-radius:10px;">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

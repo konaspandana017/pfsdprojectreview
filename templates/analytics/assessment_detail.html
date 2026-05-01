@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}{{ assessment.title }}{% endblock %}
+{% block page_title %}{{ assessment.title }}{% endblock %}
+{% block page_subtitle %}Assessment Details & Submissions{% endblock %}
+{% block content %}
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header"><h6 class="card-title mb-0">Assessment Info</h6></div>
+            <div class="card-body">
+                <dl class="row mb-0" style="font-size:0.875rem;">
+                    <dt class="col-5 text-muted">Type</dt>
+                    <dd class="col-7"><span class="badge bg-light text-dark border">{{ assessment.get_assessment_type_display }}</span></dd>
+                    <dt class="col-5 text-muted">Subject</dt>
+                    <dd class="col-7">{{ assessment.subject.name }}</dd>
+                    <dt class="col-5 text-muted">Class</dt>
+                    <dd class="col-7">{{ assessment.classroom }}</dd>
+                    <dt class="col-5 text-muted">Max Score</dt>
+                    <dd class="col-7"><strong>{{ assessment.max_score }}</strong></dd>
+                    <dt class="col-5 text-muted">Due Date</dt>
+                    <dd class="col-7">{{ assessment.due_date|date:"d M Y" }}</dd>
+                    <dt class="col-5 text-muted">Created by</dt>
+                    <dd class="col-7">{{ assessment.created_by.get_full_name|default:assessment.created_by.username }}</dd>
+                </dl>
+                {% if assessment.description %}
+                <hr style="border-color:#f1f5f9;">
+                <p class="text-muted small mb-0">{{ assessment.description }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header"><h6 class="card-title mb-0">Submissions ({{ submissions.count }})</h6></div>
+            <div class="card-body p-0">
+                <table class="table mb-0">
+                    <thead><tr><th>Student</th><th>Status</th><th>Score</th><th>Submitted</th></tr></thead>
+                    <tbody>
+                        {% for sub in submissions %}
+                        <tr>
+                            <td class="fw-500">{{ sub.student.get_full_name }}</td>
+                            <td>
+                                <span class="badge rounded-pill {% if sub.status == 'graded' %}bg-success{% elif sub.status == 'submitted' %}bg-primary{% elif sub.status == 'late' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                                    {{ sub.status }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if sub.score %}
+                                <strong>{{ sub.score }}</strong>/{{ assessment.max_score }}
+                                <small class="text-muted">({{ sub.get_percentage }}%)</small>
+                                {% else %}—{% endif %}
+                            </td>
+                            <td class="text-muted">{{ sub.submitted_at|date:"d M H:i"|default:"—" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="text-center py-4 text-muted">No submissions yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

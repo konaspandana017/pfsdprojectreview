@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Mark Attendance{% endblock %}
+{% block page_title %}Mark Attendance{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header"><h6 class="card-title mb-0"><i class="bi bi-calendar-check-fill me-2 text-primary"></i>{{ title|default:"Mark Attendance" }}</h6></div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label fw-500 small text-muted">{{ field.label }}</label>
+                        {{ field }}
+                        {% for err in field.errors %}<div class="text-danger small mt-1">{{ err }}</div>{% endfor %}
+                    </div>
+                    {% endfor %}
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn" style="background:#4f46e5;color:white;border-radius:10px;flex:1;">
+                            <i class="bi bi-check-circle me-2"></i>Save Attendance
+                        </button>
+                        <a href="{% url 'attendance_list' %}" class="btn btn-outline-secondary" style="border-radius:10px;">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

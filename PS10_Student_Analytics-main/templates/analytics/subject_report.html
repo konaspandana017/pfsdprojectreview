@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}{{ subject.name }} Report{% endblock %}
+{% block page_title %}{{ subject.name }}{% endblock %}
+{% block page_subtitle %}Subject Performance Report — {{ subject.code }}{% endblock %}
+{% block content %}
+<div class="row g-4 mb-4">
+    <div class="col-sm-3">
+        <div class="stat-card text-center">
+            <div class="stat-value text-primary">{{ overall_avg }}%</div>
+            <div class="stat-label">Class Average</div>
+        </div>
+    </div>
+    <div class="col-sm-3">
+        <div class="stat-card text-center">
+            <div class="stat-value">{{ marks|length }}</div>
+            <div class="stat-label">Total Records</div>
+        </div>
+    </div>
+    <div class="col-sm-3">
+        <div class="stat-card text-center">
+            <div class="stat-value">{{ student_summary|length }}</div>
+            <div class="stat-label">Students</div>
+        </div>
+    </div>
+    <div class="col-sm-3">
+        <div class="stat-card text-center">
+            <div class="stat-value">{{ subject.max_marks }}</div>
+            <div class="stat-label">Max Marks</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header"><h6 class="card-title">Grade Distribution</h6></div>
+            <div class="card-body"><canvas id="gradeChart" height="220"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header"><h6 class="card-title">Student Rankings</h6></div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead><tr><th>#</th><th>Student</th><th>Average</th><th>Grade</th></tr></thead>
+                        <tbody>
+                            {% for item in student_summary %}
+                            <tr>
+                                <td class="text-muted">{{ forloop.counter }}</td>
+                                <td><a href="{% url 'student_detail' item.student.pk %}" class="text-decoration-none">{{ item.student.get_full_name }}</a></td>
+                                <td>
+                                    <div class="perf-bar mb-1"><div class="perf-bar-fill" style="width:{{ item.avg }}%;background:#6366f1;"></div></div>
+                                    <small>{{ item.avg }}%</small>
+                                </td>
+                                <td>
+                                    <span class="grade-badge grade-{% if item.avg >= 90 %}A+{% elif item.avg >= 80 %}A{% elif item.avg >= 70 %}B+{% elif item.avg >= 60 %}B{% elif item.avg >= 50 %}C{% elif item.avg >= 40 %}D{% else %}F{% endif %}">
+                                        {% if item.avg >= 90 %}A+{% elif item.avg >= 80 %}A{% elif item.avg >= 70 %}B+{% elif item.avg >= 60 %}B{% elif item.avg >= 50 %}C{% elif item.avg >= 40 %}D{% else %}F{% endif %}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+const gradeData = {{ grade_dist|safe }};
+new Chart(document.getElementById('gradeChart'), {
+    type: 'doughnut',
+    data: {
+        labels: Object.keys(gradeData),
+        datasets: [{ data: Object.values(gradeData), backgroundColor: ['#6366f1','#22c55e','#3b82f6','#a855f7','#f59e0b','#f97316','#ef4444'], borderWidth: 0 }]
+    },
+    options: { cutout: '60%', plugins: { legend: { position: 'bottom' } } }
+});
+</script>
+{% endblock %}

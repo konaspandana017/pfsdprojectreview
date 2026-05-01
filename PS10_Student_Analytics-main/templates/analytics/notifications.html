@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Notifications{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        {% for notif in notifications %}
+        <div class="card mb-3 border-start border-4 {% if notif.notif_type == 'danger' %}border-danger{% elif notif.notif_type == 'warning' %}border-warning{% elif notif.notif_type == 'success' %}border-success{% else %}border-primary{% endif %}">
+            <div class="card-body d-flex gap-3 align-items-start">
+                <div style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:{% if notif.notif_type == 'danger' %}#fef2f2{% elif notif.notif_type == 'warning' %}#fef3c7{% elif notif.notif_type == 'success' %}#f0fdf4{% else %}#eef2ff{% endif %};">
+                    <i class="bi bi-bell-fill" style="color:{% if notif.notif_type == 'danger' %}#dc2626{% elif notif.notif_type == 'warning' %}#d97706{% elif notif.notif_type == 'success' %}#059669{% else %}#4f46e5{% endif %};"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between">
+                        <h6 class="mb-1 fw-600">{{ notif.title }}</h6>
+                        <small class="text-muted">{{ notif.created_at|date:"d M, H:i" }}</small>
+                    </div>
+                    <p class="mb-0 text-muted" style="font-size:0.875rem;">{{ notif.message }}</p>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-bell-slash" style="font-size:3rem;display:block;margin-bottom:12px;"></i>
+            <p>No notifications yet.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block page_title %}Students{% endblock %}
+{% block page_subtitle %}All enrolled students{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+    <div class="col-auto">
+        <form method="get" class="d-flex gap-2">
+            <select name="classroom" class="form-select form-select-sm" style="width:auto;" onchange="this.form.submit()">
+                <option value="">All Classes</option>
+                {% for c in classrooms %}
+                <option value="{{ c.pk }}" {% if classroom_filter == c.pk|stringformat:"s" %}selected{% endif %}>{{ c }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+    <div class="col ms-auto text-end">
+        <a href="/admin/accounts/user/add/" class="btn btn-primary btn-sm rounded-3">
+            <i class="bi bi-plus me-1"></i>Add Student
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table mb-0">
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Roll No</th>
+                    <th>Overall Avg</th>
+                    <th>Attendance</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for item in student_data %}
+            <tr>
+                <td>
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#4f46e5,#7c3aed);display:flex;align-items:center;justify-content:center;color:white;font-size:0.75rem;font-weight:600;flex-shrink:0;">
+                            {{ item.student.first_name|first|upper }}{{ item.student.last_name|first|upper }}
+                        </div>
+                        <div>
+                            <div class="fw-500">{{ item.student.get_full_name|default:item.student.username }}</div>
+                            <div class="text-muted" style="font-size:0.75rem;">{{ item.student.email }}</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="text-muted small">
+                    {% if item.student.student_profile %}{{ item.student.student_profile.roll_number }}{% else %}—{% endif %}
+                </td>
+                <td>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="perf-bar flex-grow-1" style="width:80px;">
+                            <div class="perf-bar-fill" style="width:{{ item.avg }}%;background:{% if item.avg >= 80 %}#059669{% elif item.avg >= 60 %}#4f46e5{% else %}#d97706{% endif %};"></div>
+                        </div>
+                        <span class="small fw-600">{{ item.avg }}%</span>
+                    </div>
+                </td>
+                <td>
+                    <span class="fw-600 small" style="color:{% if item.att_pct >= 85 %}#059669{% elif item.att_pct >= 75 %}#d97706{% else %}#dc2626{% endif %};">
+                        {{ item.att_pct }}%
+                    </span>
+                </td>
+                <td>
+                    {% if item.att_pct < 75 %}
+                    <span class="badge" style="background:#fee2e2;color:#991b1b;border-radius:8px;font-size:0.7rem;">At Risk</span>
+                    {% elif item.avg >= 80 %}
+                    <span class="badge" style="background:#d1fae5;color:#065f46;border-radius:8px;font-size:0.7rem;">Excellent</span>
+                    {% else %}
+                    <span class="badge" style="background:#dbeafe;color:#1e40af;border-radius:8px;font-size:0.7rem;">On Track</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{% url 'student_detail' item.student.pk %}" class="btn btn-sm btn-outline-primary rounded-3" style="font-size:0.75rem;">
+                        <i class="bi bi-eye me-1"></i>View
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="text-center py-4 text-muted">No students found.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

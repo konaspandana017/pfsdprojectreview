@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block page_title %}Marks{% endblock %}
+{% block page_subtitle %}Academic marks records{% endblock %}
+
+{% block content %}
+<div class="d-flex gap-2 mb-4">
+    <form method="get" class="d-flex gap-2 flex-wrap">
+        <select name="subject" class="form-select form-select-sm" style="width:auto;" onchange="this.form.submit()">
+            <option value="">All Subjects</option>
+            {% for s in subjects %}
+            <option value="{{ s.pk }}" {% if subject_filter == s.pk|stringformat:"s" %}selected{% endif %}>{{ s.name }}</option>
+            {% endfor %}
+        </select>
+        {% if not request.user.is_student_user %}
+        <select name="student" class="form-select form-select-sm" style="width:auto;" onchange="this.form.submit()">
+            <option value="">All Students</option>
+            {% for s in students %}
+            <option value="{{ s.pk }}" {% if student_filter == s.pk|stringformat:"s" %}selected{% endif %}>{{ s.get_full_name }}</option>
+            {% endfor %}
+        </select>
+        {% endif %}
+    </form>
+    {% if not request.user.is_student_user %}
+    <a href="{% url 'add_marks' %}" class="btn btn-primary btn-sm rounded-3 ms-auto">
+        <i class="bi bi-plus me-1"></i>Add Marks
+    </a>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table mb-0">
+            <thead>
+                <tr>
+                    {% if not request.user.is_student_user %}<th>Student</th>{% endif %}
+                    <th>Subject</th>
+                    <th>Exam Type</th>
+                    <th>Marks</th>
+                    <th>Percentage</th>
+                    <th>Grade</th>
+                    <th>Date</th>
+                    <th>Remarks</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for m in marks %}
+            <tr>
+                {% if not request.user.is_student_user %}
+                <td>
+                    <a href="{% url 'student_detail' m.student.pk %}" class="fw-500 text-decoration-none text-dark">
+                        {{ m.student.get_full_name|default:m.student.username }}
+                    </a>
+                </td>
+                {% endif %}
+                <td class="fw-500">{{ m.subject.name }}</td>
+                <td><span class="badge bg-light text-muted" style="border-radius:8px;">{{ m.exam_type.name }}</span></td>
+                <td><span class="fw-700" style="color:#4f46e5;">{{ m.marks_obtained }}<span class="text-muted fw-400">/{{ m.subject.max_marks }}</span></span></td>
+                <td>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="perf-bar" style="width:60px;">
+                            <div class="perf-bar-fill" style="width:{{ m.get_percentage }}%;background:{% if m.get_percentage >= 80 %}#059669{% elif m.get_percentage >= 60 %}#4f46e5{% else %}#d97706{% endif %};"></div>
+                        </div>
+                        <span class="small">{{ m.get_percentage }}%</span>
+                    </div>
+                </td>
+                <td><span class="grade-badge grade-{{ m.get_grade }}">{{ m.get_grade }}</span></td>
+                <td class="text-muted small">{{ m.date|date:"d M Y" }}</td>
+                <td class="text-muted small">{{ m.remarks|default:"—" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="8" class="text-center py-4 text-muted">No marks found.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+{% block page_title %}{{ student.get_full_name }} - Analytics{% endblock %}
+{% block page_subtitle %}Detailed performance report{% endblock %}
+
+{% block content %}
+<!-- Header Card -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="d-flex align-items-center gap-4 flex-wrap">
+            <div style="width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,#4f46e5,#7c3aed);display:flex;align-items:center;justify-content:center;color:white;font-size:1.75rem;font-weight:700;">
+                {{ student.first_name|first|upper }}{{ student.last_name|first|upper }}
+            </div>
+            <div class="flex-grow-1">
+                <h4 class="mb-1 fw-700">{{ student.get_full_name }}</h4>
+                <div class="d-flex gap-3 flex-wrap">
+                    <span class="text-muted small"><i class="bi bi-envelope me-1"></i>{{ student.email }}</span>
+                    {% if student.student_profile %}
+                    <span class="text-muted small"><i class="bi bi-hash me-1"></i>{{ student.student_profile.roll_number }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="d-flex gap-3">
+                <div class="text-center">
+                    <div class="fw-700 fs-4" style="color:#4f46e5;">{{ overall_avg }}%</div>
+                    <div class="text-muted" style="font-size:0.7rem;">Overall Avg</div>
+                </div>
+                <div class="text-center">
+                    <div class="fw-700 fs-4" style="color:{% if att_pct >= 85 %}#059669{% elif att_pct >= 75 %}#d97706{% else %}#dc2626{% endif %};">{{ att_pct }}%</div>
+                    <div class="text-muted" style="font-size:0.7rem;">Attendance</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header"><h6 class="card-title">Performance Trend</h6></div>
+            <div class="card-body" style="height:250px;"><canvas id="trendChart"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header"><h6 class="card-title">Suggestions</h6></div>
+            <div class="card-body" style="overflow-y:auto;max-height:260px;">
+                {% for s in suggestions %}
+                <div class="mb-3 p-3 rounded-3" style="background:{% if s.type == 'danger' %}#fef2f2{% elif s.type == 'warning' %}#fffbeb{% elif s.type == 'success' %}#f0fdf4{% else %}#eff6ff{% endif %};">
+                    <div class="fw-600 small mb-1">{{ s.title }}</div>
+                    <div class="small text-muted">{{ s.text }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Subject Analysis -->
+<div class="card mb-4">
+    <div class="card-header"><h6 class="card-title">Subject-wise Analysis</h6></div>
+    <div class="card-body p-0">
+        <table class="table mb-0">
+            <thead>
+                <tr>
+                    <th>Subject</th>
+                    <th>Average</th>
+                    <th>Best</th>
+                    <th>Lowest</th>
+                    <th>Grade</th>
+                    <th>Performance</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for name, data in subject_analysis.items %}
+            <tr>
+                <td class="fw-500">{{ name }}</td>
+                <td><span class="fw-700" style="color:#4f46e5;">{{ data.avg }}%</span></td>
+                <td class="text-success small fw-500">{{ data.max }}%</td>
+                <td class="text-danger small fw-500">{{ data.min }}%</td>
+                <td><span class="grade-badge grade-{{ data.grade }}">{{ data.grade }}</span></td>
+                <td style="width:180px;">
+                    <div class="perf-bar">
+                        <div class="perf-bar-fill" style="width:{{ data.avg }}%;background:{% if data.avg >= 80 %}#059669{% elif data.avg >= 60 %}#4f46e5{% else %}#d97706{% endif %};"></div>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="text-center py-3 text-muted">No marks recorded.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Attendance by Subject -->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header"><h6 class="card-title">Attendance by Subject</h6></div>
+            <div class="card-body">
+            {% for name, data in att_analysis.items %}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between small fw-500 mb-1">
+                        <span>{{ name }}</span>
+                        <span style="color:{% if data.pct >= 85 %}#059669{% elif data.pct >= 75 %}#d97706{% else %}#dc2626{% endif %};">
+                            {{ data.pct }}% ({{ data.present }}/{{ data.total }})
+                        </span>
+                    </div>
+                    <div class="perf-bar">
+                        <div class="perf-bar-fill" style="width:{{ data.pct }}%;background:{% if data.pct >= 85 %}#059669{% elif data.pct >= 75 %}#d97706{% else %}#dc2626{% endif %};"></div>
+                    </div>
+                </div>
+            {% empty %}
+                <p class="text-muted small">No attendance data.</p>
+            {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Marks -->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="card-title">Recent Marks</h6>
+                {% if not user.is_student_user %}
+                <a href="{% url 'add_marks' %}" class="btn btn-sm btn-primary rounded-3" style="font-size:0.75rem;">
+                    <i class="bi bi-plus me-1"></i>Add
+                </a>
+                {% endif %}
+            </div>
+            <div class="card-body p-0">
+                <table class="table mb-0">
+                    <thead><tr><th>Subject</th><th>Type</th><th>Marks</th><th>Grade</th></tr></thead>
+                    <tbody>
+                    {% for m in marks %}
+                    <tr>
+                        <td class="small fw-500">{{ m.subject.name }}</td>
+                        <td class="small text-muted">{{ m.exam_type.name }}</td>
+                        <td class="small fw-600" style="color:#4f46e5;">{{ m.marks_obtained }}/{{ m.subject.max_marks }}</td>
+                        <td><span class="grade-badge grade-{{ m.get_grade }}">{{ m.get_grade }}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="text-center py-3 text-muted small">No marks yet.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const trendData = {{ trend_data|safe }};
+if (trendData.length > 0) {
+    const labels = trendData.map(d => d.date);
+    const values = trendData.map(d => d.pct);
+    new Chart(document.getElementById('trendChart'), {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Performance %',
+                data: values,
+                borderColor: '#4f46e5', backgroundColor: 'rgba(79,70,229,0.08)',
+                pointBackgroundColor: '#4f46e5', pointRadius: 5, tension: 0.4, fill: true,
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false }, tooltip: {
+                callbacks: { afterLabel: (ctx) => trendData[ctx.dataIndex].subject }
+            }},
+            scales: {
+                y: { beginAtZero: true, max: 100, grid: { color: '#f1f5f9' } },
+                x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+            }
+        }
+    });
+}
+</script>
+{% endblock %}

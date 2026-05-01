@@ -1,0 +1,451 @@
+{% extends 'base.html' %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}
+    {% if user.is_admin_user %}System Overview{% elif user.is_teacher %}Teacher Overview{% else %}My Academic Progress{% endif %}
+{% endblock %}
+
+{% block content %}
+
+<!-- ADMIN DASHBOARD -->
+{% if user.is_admin_user %}
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#eef2ff;color:#4f46e5;"><i class="bi bi-people-fill"></i></div>
+            <div class="stat-value">{{ total_students }}</div>
+            <div class="stat-label">Total Students</div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#f0fdf4;color:#059669;"><i class="bi bi-mortarboard-fill"></i></div>
+            <div class="stat-value">{{ total_teachers }}</div>
+            <div class="stat-label">Total Teachers</div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#fef3c7;color:#d97706;"><i class="bi bi-book-fill"></i></div>
+            <div class="stat-value">{{ total_subjects }}</div>
+            <div class="stat-label">Subjects</div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#fce7f3;color:#be185d;"><i class="bi bi-calendar-check-fill"></i></div>
+            <div class="stat-value">{{ att_rate }}%</div>
+            <div class="stat-label">Attendance Rate (7d)</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="card-title">Grade Distribution</h6>
+                <span class="badge bg-light text-muted small">All Students</span>
+            </div>
+            <div class="card-body" style="height:250px;">
+                <canvas id="gradeChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <h6 class="card-title">Subject Performance</h6>
+            </div>
+            <div class="card-body" style="height:250px;">
+                <canvas id="subjectChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="card-title">🏆 Top Performers</h6>
+                <a href="{% url 'student_list' %}" class="btn btn-sm btn-outline-primary rounded-3" style="font-size:0.75rem;">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <table class="table mb-0">
+                    <thead><tr><th>#</th><th>Student</th><th>Average</th><th>Grade</th></tr></thead>
+                    <tbody>
+                    {% for item in top_students %}
+                    <tr>
+                        <td><strong style="color:#4f46e5;">{{ forloop.counter }}</strong></td>
+                        <td>
+                            <a href="{% url 'student_detail' item.student.pk %}" class="text-decoration-none fw-500 text-dark">
+                                {{ item.student.get_full_name|default:item.student.username }}
+                            </a>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="perf-bar flex-grow-1">
+                                    <div class="perf-bar-fill" style="width:{{ item.avg }}%;background:{% if item.avg >= 80 %}#059669{% elif item.avg >= 60 %}#4f46e5{% else %}#d97706{% endif %};"></div>
+                                </div>
+                                <span class="small fw-600">{{ item.avg }}%</span>
+                            </div>
+                        </td>
+                        <td><span class="grade-badge grade-{% if item.avg >= 90 %}A+{% elif item.avg >= 80 %}A{% elif item.avg >= 70 %}B+{% elif item.avg >= 60 %}B{% elif item.avg >= 50 %}C{% else %}D{% endif %}">{% if item.avg >= 90 %}A+{% elif item.avg >= 80 %}A{% elif item.avg >= 70 %}B+{% elif item.avg >= 60 %}B{% elif item.avg >= 50 %}C{% else %}D{% endif %}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="text-center text-muted py-3">No data yet</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="card-title">Recent Marks Entry</h6>
+                <a href="{% url 'add_marks' %}" class="btn btn-sm btn-primary rounded-3" style="font-size:0.75rem;"><i class="bi bi-plus me-1"></i>Add Marks</a>
+            </div>
+            <div class="card-body p-0">
+                <table class="table mb-0">
+                    <thead><tr><th>Student</th><th>Subject</th><th>Marks</th><th>Date</th></tr></thead>
+                    <tbody>
+                    {% for m in recent_marks %}
+                    <tr>
+                        <td class="fw-500">{{ m.student.get_full_name|default:m.student.username }}</td>
+                        <td class="text-muted small">{{ m.subject.name }}</td>
+                        <td><span class="fw-600" style="color:#4f46e5;">{{ m.marks_obtained }}/{{ m.subject.max_marks }}</span></td>
+                        <td class="text-muted small">{{ m.date|date:"d M" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="text-center text-muted py-3">No marks yet</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TEACHER DASHBOARD -->
+{% elif user.is_teacher %}
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#eef2ff;color:#4f46e5;"><i class="bi bi-book-fill"></i></div>
+            <div class="stat-value">{{ subjects|length }}</div>
+            <div class="stat-label">My Subjects</div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#f0fdf4;color:#059669;"><i class="bi bi-people-fill"></i></div>
+            <div class="stat-value">{{ student_count }}</div>
+            <div class="stat-label">My Students</div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#fef3c7;color:#d97706;"><i class="bi bi-building"></i></div>
+            <div class="stat-value">{{ classes|length }}</div>
+            <div class="stat-label">My Classes</div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#fce7f3;color:#be185d;"><i class="bi bi-journal-check"></i></div>
+            <div class="stat-value">{{ pending_assessments|length }}</div>
+            <div class="stat-label">Active Assessments</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header"><h6 class="card-title">Subject Performance Overview</h6></div>
+            <div class="card-body" style="height:250px;"><canvas id="subjectChart"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header"><h6 class="card-title">My Subjects</h6></div>
+            <div class="card-body">
+                {% for s in subjects %}
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div>
+                        <div class="fw-500 small">{{ s.name }}</div>
+                        <div class="text-muted" style="font-size:0.7rem;">{{ s.code }}</div>
+                    </div>
+                    <a href="{% url 'subject_report' s.pk %}" class="btn btn-sm btn-outline-primary rounded-3" style="font-size:0.7rem;">Report</a>
+                </div>
+                {% empty %}
+                <p class="text-muted small">No subjects assigned.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="card-title">Recent Marks I Entered</h6>
+        <a href="{% url 'add_marks' %}" class="btn btn-sm btn-primary rounded-3" style="font-size:0.75rem;"><i class="bi bi-plus me-1"></i>Add Marks</a>
+    </div>
+    <div class="card-body p-0">
+        <table class="table mb-0">
+            <thead><tr><th>Student</th><th>Subject</th><th>Exam</th><th>Marks</th><th>%</th><th>Date</th></tr></thead>
+            <tbody>
+            {% for m in recent_marks %}
+            <tr>
+                <td><a href="{% url 'student_detail' m.student.pk %}" class="fw-500 text-decoration-none">{{ m.student.get_full_name }}</a></td>
+                <td class="text-muted small">{{ m.subject.name }}</td>
+                <td class="text-muted small">{{ m.exam_type.name }}</td>
+                <td class="fw-600" style="color:#4f46e5;">{{ m.marks_obtained }}/{{ m.subject.max_marks }}</td>
+                <td><span class="badge" style="background:#eef2ff;color:#4f46e5;border-radius:8px;">{{ m.get_percentage }}%</span></td>
+                <td class="text-muted small">{{ m.date|date:"d M" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="text-center py-3 text-muted">No marks entered yet.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- STUDENT DASHBOARD -->
+{% else %}
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#eef2ff;color:#4f46e5;"><i class="bi bi-bar-chart-fill"></i></div>
+            <div class="stat-value">{{ overall_avg }}%</div>
+            <div class="stat-label">Overall Average</div>
+            <div class="mt-2">
+                <div class="perf-bar">
+                    <div class="perf-bar-fill" style="width:{{ overall_avg }}%;background:{% if overall_avg >= 80 %}#059669{% elif overall_avg >= 60 %}#4f46e5{% else %}#d97706{% endif %};"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#f0fdf4;color:#059669;"><i class="bi bi-calendar-check-fill"></i></div>
+            <div class="stat-value">{{ att_pct }}%</div>
+            <div class="stat-label">Attendance Rate</div>
+            <div class="mt-2">
+                <div class="perf-bar">
+                    <div class="perf-bar-fill" style="width:{{ att_pct }}%;background:{% if att_pct >= 85 %}#059669{% elif att_pct >= 75 %}#d97706{% else %}#dc2626{% endif %};"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#fef3c7;color:#d97706;"><i class="bi bi-calendar-fill"></i></div>
+            <div class="stat-value">{{ present_att }}</div>
+            <div class="stat-label">Days Present / {{ total_att }}</div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#fce7f3;color:#be185d;"><i class="bi bi-journal-check"></i></div>
+            <div class="stat-value">{{ pending_submissions|length }}</div>
+            <div class="stat-label">Pending Submissions</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="card-title">Performance Trend</h6>
+                <span class="text-muted small">Last 12 assessments</span>
+            </div>
+            <div class="card-body" style="height:250px;"><canvas id="trendChart"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header"><h6 class="card-title">Subject Average</h6></div>
+            <div class="card-body" style="height:250px;"><canvas id="subjectChart"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header"><h6 class="card-title">Attendance by Subject</h6></div>
+            <div class="card-body">
+                <div id="attSubjectBars"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header"><h6 class="card-title"><i class="bi bi-lightbulb-fill me-2" style="color:#d97706;"></i>Improvement Suggestions</h6></div>
+            <div class="card-body">
+                {% for s in suggestions %}
+                <div class="suggestion-card mb-3" style="background:{% if s.type == 'danger' %}#fef2f2{% elif s.type == 'warning' %}#fffbeb{% elif s.type == 'success' %}#f0fdf4{% else %}#eff6ff{% endif %};">
+                    <div class="suggestion-icon" style="background:{% if s.type == 'danger' %}#fee2e2{% elif s.type == 'warning' %}#fef3c7{% elif s.type == 'success' %}#d1fae5{% else %}#dbeafe{% endif %};color:{% if s.type == 'danger' %}#991b1b{% elif s.type == 'warning' %}#92400e{% elif s.type == 'success' %}#065f46{% else %}#1e40af{% endif %};">
+                        <i class="bi bi-{{ s.icon }}"></i>
+                    </div>
+                    <div>
+                        <div class="fw-600 small" style="color:#1e293b;margin-bottom:2px;">{{ s.title }}</div>
+                        <div class="small" style="color:#64748b;">{{ s.text }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="card-title">Recent Marks</h6>
+        <a href="{% url 'marks_list' %}" class="btn btn-sm btn-outline-primary rounded-3" style="font-size:0.75rem;">View All</a>
+    </div>
+    <div class="card-body p-0">
+        <table class="table mb-0">
+            <thead><tr><th>Subject</th><th>Exam Type</th><th>Marks</th><th>%</th><th>Grade</th><th>Date</th></tr></thead>
+            <tbody>
+            {% for m in recent_marks %}
+            <tr>
+                <td class="fw-500">{{ m.subject.name }}</td>
+                <td class="text-muted small">{{ m.exam_type.name }}</td>
+                <td class="fw-600" style="color:#4f46e5;">{{ m.marks_obtained }}/{{ m.subject.max_marks }}</td>
+                <td>{{ m.get_percentage }}%</td>
+                <td><span class="grade-badge grade-{{ m.get_grade }}">{{ m.get_grade }}</span></td>
+                <td class="text-muted small">{{ m.date|date:"d M Y" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="text-center py-3 text-muted">No marks recorded yet.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const CHART_DEFAULTS = {
+    plugins: { legend: { display: false } },
+    responsive: true, maintainAspectRatio: false,
+};
+
+{% if user.is_admin_user %}
+// Grade Distribution Doughnut
+const gradeData = {{ grade_dist|safe }};
+new Chart(document.getElementById('gradeChart'), {
+    type: 'doughnut',
+    data: {
+        labels: Object.keys(gradeData),
+        datasets: [{
+            data: Object.values(gradeData),
+            backgroundColor: ['#4f46e5','#059669','#3b82f6','#8b5cf6','#f59e0b','#f97316','#ef4444'],
+            borderWidth: 0, hoverOffset: 8,
+        }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 12, padding: 16, font: { size: 11 } } } } }
+});
+
+// Subject Avg Bar
+const subjData = {{ subject_avgs|safe }};
+if (subjData.length > 0) {
+    new Chart(document.getElementById('subjectChart'), {
+        type: 'bar',
+        data: {
+            labels: subjData.map(d => d.name),
+            datasets: [{
+                data: subjData.map(d => d.avg),
+                backgroundColor: '#4f46e5', borderRadius: 8, borderSkipped: false,
+            }]
+        },
+        options: { ...CHART_DEFAULTS, scales: { y: { beginAtZero: true, max: 100, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } } }
+    });
+}
+
+{% elif user.is_teacher %}
+const subjData = {{ subject_data|safe }};
+if (subjData.length > 0 && document.getElementById('subjectChart')) {
+    new Chart(document.getElementById('subjectChart'), {
+        type: 'horizontalBar',
+        type: 'bar',
+        data: {
+            labels: subjData.map(d => d.name),
+            datasets: [{
+                label: 'Average Marks',
+                data: subjData.map(d => d.avg),
+                backgroundColor: ['#4f46e5','#7c3aed','#059669','#d97706','#be185d'],
+                borderRadius: 8, borderSkipped: false,
+            }]
+        },
+        options: { indexAxis: 'y', ...CHART_DEFAULTS, scales: { x: { beginAtZero: true, max: 100, grid: { color: '#f1f5f9' } }, y: { grid: { display: false } } } }
+    });
+}
+
+{% else %}
+// Student: Trend Chart
+const trendData = {{ trend_data|safe }};
+if (trendData.length > 0 && document.getElementById('trendChart')) {
+    new Chart(document.getElementById('trendChart'), {
+        type: 'line',
+        data: {
+            labels: trendData.map(d => d.date),
+            datasets: [{
+                label: 'Performance %',
+                data: trendData.map(d => d.pct),
+                borderColor: '#4f46e5', backgroundColor: 'rgba(79,70,229,0.08)',
+                pointBackgroundColor: '#4f46e5', pointRadius: 4, tension: 0.4, fill: true,
+            }]
+        },
+        options: { ...CHART_DEFAULTS, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100, grid: { color: '#f1f5f9' } }, x: { grid: { display: false }, ticks: { font: { size: 10 } } } } }
+    });
+}
+
+// Subject Chart (Radar)
+const subjChart = {{ subject_chart|safe }};
+if (subjChart.length > 0 && document.getElementById('subjectChart')) {
+    new Chart(document.getElementById('subjectChart'), {
+        type: 'radar',
+        data: {
+            labels: subjChart.map(d => d.subject),
+            datasets: [{
+                data: subjChart.map(d => d.avg),
+                backgroundColor: 'rgba(79,70,229,0.15)', borderColor: '#4f46e5',
+                pointBackgroundColor: '#4f46e5', pointRadius: 4,
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, scales: { r: { beginAtZero: true, max: 100, ticks: { font: { size: 9 } } } }, plugins: { legend: { display: false } } }
+    });
+}
+
+// Attendance by Subject Bars
+const attData = {{ att_by_subject|safe }};
+const container = document.getElementById('attSubjectBars');
+if (container && attData.length > 0) {
+    attData.forEach(d => {
+        const color = d.pct >= 85 ? '#059669' : d.pct >= 75 ? '#d97706' : '#dc2626';
+        container.innerHTML += `
+        <div class="mb-3">
+            <div class="d-flex justify-content-between small fw-500 mb-1">
+                <span>${d.subject}</span>
+                <span style="color:${color};">${d.pct}%</span>
+            </div>
+            <div class="perf-bar">
+                <div class="perf-bar-fill" style="width:${d.pct}%;background:${color};"></div>
+            </div>
+        </div>`;
+    });
+} else if (container) {
+    container.innerHTML = '<p class="text-muted small">No attendance records yet.</p>';
+}
+{% endif %}
+</script>
+{% endblock %}

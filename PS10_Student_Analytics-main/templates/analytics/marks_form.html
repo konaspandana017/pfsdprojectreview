@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title"><i class="bi bi-clipboard2-data me-2" style="color:#4f46e5;"></i>{{ title }}</h6>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label small text-muted fw-500">Student</label>
+                        {{ form.student }}
+                        {% for err in form.student.errors %}<div class="text-danger small mt-1">{{ err }}</div>{% endfor %}
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small text-muted fw-500">Subject</label>
+                            {{ form.subject }}
+                            {% for err in form.subject.errors %}<div class="text-danger small mt-1">{{ err }}</div>{% endfor %}
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small text-muted fw-500">Exam Type</label>
+                            {{ form.exam_type }}
+                            {% for err in form.exam_type.errors %}<div class="text-danger small mt-1">{{ err }}</div>{% endfor %}
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small text-muted fw-500">Marks Obtained</label>
+                            {{ form.marks_obtained }}
+                            {% for err in form.marks_obtained.errors %}<div class="text-danger small mt-1">{{ err }}</div>{% endfor %}
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small text-muted fw-500">Date</label>
+                            {{ form.date }}
+                            {% for err in form.date.errors %}<div class="text-danger small mt-1">{{ err }}</div>{% endfor %}
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small text-muted fw-500">Remarks (Optional)</label>
+                        {{ form.remarks }}
+                    </div>
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger rounded-3 small mb-3">{{ form.non_field_errors }}</div>
+                    {% endif %}
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary rounded-3 px-4">
+                            <i class="bi bi-check2 me-2"></i>Save Marks
+                        </button>
+                        <a href="{% url 'marks_list' %}" class="btn btn-light rounded-3">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

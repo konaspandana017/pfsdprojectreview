@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block page_title %}Attendance Records{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-end mb-4">
+    {% if not request.user.is_student_user %}
+    <a href="{% url 'mark_attendance' %}" class="btn btn-primary btn-sm rounded-3">
+        <i class="bi bi-check2-square me-1"></i>Mark Attendance
+    </a>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table mb-0">
+            <thead>
+                <tr>
+                    {% if not request.user.is_student_user %}<th>Student</th>{% endif %}
+                    <th>Subject</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Note</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for a in attendance %}
+            <tr>
+                {% if not request.user.is_student_user %}
+                <td><a href="{% url 'student_detail' a.student.pk %}" class="fw-500 text-decoration-none text-dark">{{ a.student.get_full_name }}</a></td>
+                {% endif %}
+                <td class="fw-500">{{ a.subject.name }}</td>
+                <td class="text-muted small">{{ a.date|date:"d M Y" }}</td>
+                <td>
+                    <span class="badge rounded-3" style="
+                        background:{% if a.status == 'present' %}#d1fae5;color:#065f46{% elif a.status == 'absent' %}#fee2e2;color:#991b1b{% elif a.status == 'late' %}#fef3c7;color:#92400e{% else %}#dbeafe;color:#1e40af{% endif %};
+                        padding:5px 10px;">
+                        <i class="bi bi-{% if a.status == 'present' %}check-circle{% elif a.status == 'absent' %}x-circle{% elif a.status == 'late' %}clock{% else %}info-circle{% endif %} me-1"></i>
+                        {{ a.get_status_display }}
+                    </span>
+                </td>
+                <td class="text-muted small">{{ a.note|default:"—" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-center py-4 text-muted">No attendance records found.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
