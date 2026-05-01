@@ -54,15 +54,10 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'student_analytics.wsgi.application'
 
+import dj_database_url
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'student_analytics_db',
-        'USER': 'postgres',
-        'PASSWORD': '93905@Sai',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
+    'default': dj_database_url.parse("postgresql://neondb_owner:npg_2bWkzRUuPw9K@ep-rapid-fog-amg92nyq.c-5.us-east-1.aws.neon.tech/neondb?sslmode=require")
 }
 
 AUTH_USER_MODEL = 'accounts.User'
